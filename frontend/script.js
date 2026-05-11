@@ -1,4 +1,5 @@
 const scanBtn = document.getElementById("scanBtn");
+<<<<<<< HEAD
 const themeToggleBtn = document.getElementById("themeToggleBtn");
 const output = document.getElementById("output");
 const lastScanValue = document.getElementById("lastScanValue");
@@ -116,3 +117,17 @@ scanBtn.addEventListener("click", async () => {
 });
 
 initTheme();
+=======
+const output = document.getElementById("output");
+
+scanBtn.addEventListener("click", async () => {
+    output.textContent = "Running scan...";
+    try {
+        const response = await fetch("http://127.0.0.1:5000/scan");
+        const data = await response.json();
+        output.textContent = JSON.stringify(data, null, 4);
+    } catch (error) {
+        output.textContent = "Error: " + error.message;
+    }
+});
+>>>>>>> 73af21f54f9b402aae73349e99c9a52ea3c40b0b
