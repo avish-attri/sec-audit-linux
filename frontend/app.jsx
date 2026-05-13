@@ -25,6 +25,7 @@ function DashboardApp() {
     };
 
     const [route, setRoute] = useState(getRouteFromPath);
+    const [activeTab, setActiveTab] = useState("high");
 
     useEffect(() => {
         document.documentElement.setAttribute("data-theme", "dark");
@@ -43,17 +44,68 @@ function DashboardApp() {
         { key: "PASS", label: "PASS", count: statusCounts.PASS, className: "pass" },
         { key: "WARNING", label: "WARNING", count: statusCounts.WARNING, className: "warning" },
         { key: "FAIL", label: "FAIL", count: statusCounts.FAIL, className: "fail" },
-        { key: "ERROR", label: "ERROR", count: statusCounts.ERROR, className: "error" }
+        { key: "ERROR", label: "UNAVAILABLE", count: statusCounts.ERROR, className: "error" }
     ]), [statusCounts]);
     const totalChecks = results.length;
+    const statusIconMap = {
+        PASS: "🛡️",
+        FAIL: "⚠️",
+        WARNING: "🚨",
+        ERROR: "❌"
+    };
+
+    const getStatusLabel = (item) => {
+        const status = (item.status || "ERROR").toUpperCase();
+        if (status !== "ERROR") {
+            return status;
+        }
+
+        const details = (item.details || "").toLowerCase();
+        if (/permission denied|access denied|operation not permitted|requires root|must be root/.test(details)) {
+            return "PERMISSION REQUIRED";
+        }
+        if (/not configured|not found|no such file|no such directory|command not found|could not find|missing/.test(details)) {
+            return "NOT CONFIGURED";
+        }
+        return "NOT AVAILABLE";
+    };
+
     const sortedResults = useMemo(() => {
-        const order = { FAIL: 1, ERROR: 2, WARNING: 3, PASS: 4 };
+        const order = { FAIL: 1, WARNING: 2, ERROR: 3, PASS: 4 };
         return [...results].sort((a, b) => {
             const aStatus = (a.status || "ERROR").toUpperCase();
             const bStatus = (b.status || "ERROR").toUpperCase();
             return (order[aStatus] || 99) - (order[bStatus] || 99);
         });
     }, [results]);
+
+    const activeTabResults = useMemo(() => {
+        const selectedRisk = activeTab === "high"
+            ? "high"
+            : activeTab === "medium"
+                ? "medium"
+                : activeTab === "low"
+                    ? "low"
+                    : activeTab === "unknown"
+                        ? "unknown"
+                        : null;
+
+        return sortedResults.filter((item) => {
+            if (!selectedRisk) {
+                return true;
+            }
+            const itemRisk = (item.risk || "Unknown").toLowerCase();
+            return itemRisk === selectedRisk;
+        });
+    }, [sortedResults, activeTab]);
+
+    const tabIconMap = {
+        high: "⚠️",
+        medium: "🚨",
+        low: "🛡️",
+        unknown: "❔",
+        all: "📋"
+    };
 
     const navigate = (path) => {
         window.history.pushState({}, "", path);
@@ -104,6 +156,9 @@ function DashboardApp() {
                     <div className="meta-item">
                         <span>Total Checks:</span> <strong>{results.length || "-"}</strong>
                     </div>
+                    <div className="meta-item">
+                        <span>Host IP:</span> <strong>{report?.host_ip || "-"}</strong>
+                    </div>
                 </section>
 
                 <div className="results-output">
@@ -131,7 +186,7 @@ function DashboardApp() {
                                     <div className="status-item pass">PASS: {statusCounts.PASS}</div>
                                     <div className="status-item warning">WARNING: {statusCounts.WARNING}</div>
                                     <div className="status-item fail">FAIL: {statusCounts.FAIL}</div>
-                                    <div className="status-item error">ERROR: {statusCounts.ERROR}</div>
+                                    <div className="status-item error">UNAVAILABLE: {statusCounts.ERROR}</div>
                                 </div>
                             </section>
 
@@ -158,15 +213,35 @@ function DashboardApp() {
                                 </article>
                             </section>
 
+                            <section className="tabs-panel">
+                                {[
+                                    { key: "high", label: "High Risk" },
+                                    { key: "medium", label: "Medium Risk" },
+                                    { key: "low", label: "Low Risk" },
+                                    { key: "unknown", label: "Unknown Risk" },
+                                    { key: "all", label: "All Checks" },
+                                ].map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        type="button"
+                                        className={`tab-btn ${activeTab === tab.key ? "active" : ""}`}
+                                        onClick={() => setActiveTab(tab.key)}
+                                    >
+                                        {tabIconMap[tab.key]} {tab.label}
+                                    </button>
+                                ))}
+                            </section>
+
                             <section className="checks-section">
-                                {sortedResults.map((item, index) => {
+                                {activeTabResults.map((item, index) => {
                                     const status = (item.status || "ERROR").toLowerCase();
                                     return (
                                         <article className="check-card" key={`${item.name}-${index}`}>
                                             <div className="card-header">
                                                 <h3>{item.name || "Unnamed Check"}</h3>
                                                 <span className={`status-badge status-${status}`}>
-                                                    {item.status || "ERROR"}
+                                                    {statusIconMap[(item.status || "ERROR").toUpperCase()] || "❔"}
+                                                    {" "}{getStatusLabel(item)}
                                                 </span>
                                             </div>
                                             <p><strong>Risk:</strong> {item.risk || "Unknown"}</p>

@@ -1,3 +1,5 @@
+import socket
+
 from scanner.auth_checks import (
     check_uid_zero_users,
     check_ssh_root_login,
@@ -31,6 +33,15 @@ from scanner.service_checks import (
 from scanner.scorer import calculate_score
 
 
+def get_local_ip():
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.connect(("8.8.8.8", 80))
+            return sock.getsockname()[0]
+    except Exception:
+        return "127.0.0.1"
+
+
 def run_all_checks():
     results = []
     results.append(check_uid_zero_users())
@@ -62,4 +73,5 @@ def build_scan_report():
     return {
         "score": score,
         "results": results,
+        "host_ip": get_local_ip(),
     }
