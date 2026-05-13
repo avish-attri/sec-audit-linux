@@ -124,22 +124,32 @@ def check_guest_account():
             },
         )
 
-    found = False
-    with passwd_path.open("r", encoding="utf-8", errors="ignore") as file:
-        for line in file:
-            if "guest" in line.lower():
-                found = True
-                break
+    try:
+        found = False
+        with passwd_path.open("r", encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                if "guest" in line.lower():
+                    found = True
+                    break
 
-    status = "fail" if found else "pass"
-    return build_result(
-        "AUTH-GUEST-ACCOUNT",
-        "Guest Account Check",
-        status,
-        {
-            "guest_account_found": found,
-        },
-    )
+        status = "fail" if found else "pass"
+        return build_result(
+            "AUTH-GUEST-ACCOUNT",
+            "Guest Account Check",
+            status,
+            {
+                "guest_account_found": found,
+            },
+        )
+    except Exception as e:
+        return build_result(
+            "AUTH-GUEST-ACCOUNT",
+            "Guest Account Check",
+            "unknown",
+            {
+                "error": str(e),
+            },
+        )
 
 
 def check_password_policy():
@@ -156,28 +166,42 @@ def check_password_policy():
         )
 
     max_days = None
-    with config.open("r", encoding="utf-8", errors="ignore") as file:
-        for line in file:
-            cleaned = line.strip()
-            if cleaned.startswith("PASS_MAX_DAYS"):
-                parts = cleaned.split()
-                if len(parts) >= 2:
-                    max_days = int(parts[1])
+    try:
+        with config.open("r", encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                cleaned = line.strip()
+                if cleaned.startswith("PASS_MAX_DAYS"):
+                    parts = cleaned.split()
+                    if len(parts) >= 2:
+                        try:
+                            max_days = int(parts[1])
+                        except ValueError:
+                            max_days = None
+                            break
 
-    status = "pass"
-    if max_days is None:
-        status = "unknown"
-    elif max_days > 90:
-        status = "warn"
+        status = "pass"
+        if max_days is None:
+            status = "unknown"
+        elif max_days > 90:
+            status = "warn"
 
-    return build_result(
-        "AUTH-PASSWORD-POLICY",
-        "Password Expiry Policy",
-        status,
-        {
-            "pass_max_days": max_days,
-        },
-    )
+        return build_result(
+            "AUTH-PASSWORD-POLICY",
+            "Password Expiry Policy",
+            status,
+            {
+                "pass_max_days": max_days,
+            },
+        )
+    except Exception as e:
+        return build_result(
+            "AUTH-PASSWORD-POLICY",
+            "Password Expiry Policy",
+            "unknown",
+            {
+                "error": str(e),
+            },
+        )
 
 
 def check_empty_password_accounts():
@@ -193,28 +217,38 @@ def check_empty_password_accounts():
             },
         )
 
-    empty_accounts = []
-    with shadow.open("r", encoding="utf-8", errors="ignore") as file:
-        for line in file:
-            parts = line.strip().split(":")
-            if len(parts) < 2:
-                continue
+    try:
+        empty_accounts = []
+        with shadow.open("r", encoding="utf-8", errors="ignore") as file:
+            for line in file:
+                parts = line.strip().split(":")
+                if len(parts) < 2:
+                    continue
 
-            username = parts[0]
-            password_field = parts[1]
-            if password_field == "":
-                empty_accounts.append(username)
+                username = parts[0]
+                password_field = parts[1]
+                if password_field == "":
+                    empty_accounts.append(username)
 
-    status = "pass"
-    if empty_accounts:
-        status = "fail"
+        status = "pass"
+        if empty_accounts:
+            status = "fail"
 
-    return build_result(
-        "AUTH-EMPTY-PASSWORDS",
-        "Empty Password Accounts",
-        status,
-        {
-            "accounts": empty_accounts,
-            "count": len(empty_accounts),
-        },
-    )
+        return build_result(
+            "AUTH-EMPTY-PASSWORDS",
+            "Empty Password Accounts",
+            status,
+            {
+                "accounts": empty_accounts,
+                "count": len(empty_accounts),
+            },
+        )
+    except Exception as e:
+        return build_result(
+            "AUTH-EMPTY-PASSWORDS",
+            "Empty Password Accounts",
+            "unknown",
+            {
+                "error": str(e),
+            },
+        )
