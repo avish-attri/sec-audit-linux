@@ -1,4 +1,5 @@
 import socket
+import time
 
 from scanner.auth_checks import (
     check_uid_zero_users,
@@ -68,10 +69,13 @@ def run_all_checks():
 
 
 def build_scan_report():
+    start_time = time.perf_counter()
     results = run_all_checks()
+    duration_seconds = time.perf_counter() - start_time
     score = calculate_score(results)
     return {
         "score": score,
         "results": results,
         "host_ip": get_local_ip(),
+        "duration_seconds": round(duration_seconds, 2),
     }

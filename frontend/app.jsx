@@ -54,6 +54,13 @@ function DashboardApp() {
         ERROR: "❌"
     };
 
+    const formatDuration = (seconds) => {
+        if (seconds == null || Number.isNaN(seconds)) {
+            return "-";
+        }
+        return `${seconds.toFixed(2)}s`;
+    };
+
     const getStatusLabel = (item) => {
         const status = (item.status || "ERROR").toUpperCase();
         if (status !== "ERROR") {
@@ -158,6 +165,9 @@ function DashboardApp() {
                     </div>
                     <div className="meta-item">
                         <span>Host IP:</span> <strong>{report?.host_ip || "-"}</strong>
+                    </div>
+                    <div className="meta-item">
+                        <span>Scan Time:</span> <strong>{formatDuration(report?.duration_seconds)}</strong>
                     </div>
                 </section>
 
