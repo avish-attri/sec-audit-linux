@@ -18,6 +18,16 @@ def serve_index():
     return send_from_directory(FRONTEND_DIR, "index.html")
 
 
+@app.route("/scan", methods=["GET"])
+def serve_scan():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
+@app.route("/scan-result", methods=["GET"])
+def serve_scan_result():
+    return send_from_directory(FRONTEND_DIR, "index.html")
+
+
 @app.route("/frontend/<path:filename>", methods=["GET"])
 def serve_frontend_file(filename):
     return send_from_directory(FRONTEND_DIR, filename)

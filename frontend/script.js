@@ -33,7 +33,20 @@ function renderReport(report) {
         }
     }
 
-    const cardsHtml = results.map((item) => {
+    const order = {
+        FAIL: 1,
+        ERROR: 2,
+        WARNING: 3,
+        PASS: 4,
+    };
+
+    const sortedResults = [...results].sort((a, b) => {
+        const aStatus = (a.status || "PASS").toUpperCase();
+        const bStatus = (b.status || "PASS").toUpperCase();
+        return (order[aStatus] || 99) - (order[bStatus] || 99);
+    });
+
+    const cardsHtml = sortedResults.map((item) => {
         const status = escapeHtml(item.status || "ERROR");
         const risk = escapeHtml(item.risk || "Unknown");
         const name = escapeHtml(item.name || "Unnamed Check");

@@ -18,3 +18,8 @@ python test_runner.py
 
 - POST /api/scan
 - GET /api/results
+
+## Frontend Routes
+
+- GET /scan
+- GET /scan-result
