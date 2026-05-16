@@ -17,11 +17,29 @@ def run_command(command, sudo_password=None):
             text=True,
             input=(sudo_password + "\n") if sudo_password is not None else None,
         )
+        stdout = result.stdout.strip()
+        stderr = result.stderr.strip()
+
+        if result.returncode != 0 and sudo_password is not None:
+            low_err = stderr.lower()
+            if (
+                "sorry, try again" in low_err
+                or "authentication failure" in low_err
+                or "a password is required" in low_err
+                or ("sudo:" in low_err and "password" in low_err)
+            ):
+                return {
+                    "success": False,
+                    "returncode": result.returncode,
+                    "output": "",
+                    "error": "Incorrect sudo password or sudo authentication failed",
+                }
+
         return {
             "success": result.returncode == 0,
             "returncode": result.returncode,
-            "output": result.stdout.strip(),
-            "error": result.stderr.strip(),
+            "output": stdout,
+            "error": stderr,
         }
     except Exception as e:
         return {
