@@ -10,9 +10,6 @@ pip install -r requirements.txt
 
 python app.py
 
-## Run Scanner Directly
-
-python test_runner.py
 
 ## API Endpoints
 
