@@ -2,6 +2,7 @@
 
 Simple Linux security scanner with Flask API.
 
+python3 pm venv venv
 source /venv/bin/activate
 
 ## Install
@@ -22,3 +23,5 @@ python app.py
 
 - GET /scan
 - GET /scan-result
+
+sudo fuser -k 5000/tcp
